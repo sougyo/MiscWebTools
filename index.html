@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Note数式変換ツール</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 14px;
+      background: #f5f5f5;
+      color: #1f2937;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #fff;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 16px 24px;
+    }
+
+    header h1 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #6d28d9;
+    }
+
+    header p {
+      margin-top: 4px;
+      font-size: 13px;
+      color: #6b7280;
+    }
+
+    main {
+      max-width: 900px;
+      margin: 32px auto;
+      padding: 0 16px;
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 24px;
+    }
+
+    .card + .card {
+      margin-top: 16px;
+    }
+
+    .card h2 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 12px;
+    }
+
+    .card p.desc {
+      font-size: 13px;
+      color: #6b7280;
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+
+    .code {
+      font-family: 'Consolas', 'Menlo', monospace;
+      background: #f3f4f6;
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: 13px;
+    }
+
+    .editor-area {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .editor-block label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 220px;
+      padding: 10px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-family: 'Consolas', 'Menlo', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      resize: vertical;
+      transition: border-color 0.15s;
+      background: #fafafa;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: #6d28d9;
+      background: #fff;
+    }
+
+    textarea[readonly] {
+      background: #f9fafb;
+      color: #374151;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 7px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      border: 1px solid transparent;
+    }
+
+    .btn-primary {
+      background: #6d28d9;
+      color: #fff;
+      border-color: #6d28d9;
+    }
+
+    .btn-primary:hover { background: #5b21b6; border-color: #5b21b6; }
+
+    .btn-secondary {
+      background: #fff;
+      color: #6d28d9;
+      border-color: #6d28d9;
+    }
+
+    .btn-secondary:hover { background: #f5f3ff; }
+
+    .btn-ghost {
+      background: transparent;
+      color: #6b7280;
+      border-color: #d1d5db;
+    }
+
+    .btn-ghost:hover { background: #f3f4f6; }
+
+    .btn-copy.copied {
+      background: #059669;
+      color: #fff;
+      border-color: #059669;
+    }
+
+    .rule-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .rule-table th {
+      text-align: left;
+      padding: 8px 12px;
+      background: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    .rule-table td {
+      padding: 8px 12px;
+      border: 1px solid #e5e7eb;
+      color: #4b5563;
+    }
+
+    .rule-table tr:nth-child(even) td { background: #f9fafb; }
+
+    @media (max-width: 600px) {
+      .editor-area { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Note 数式変換ツール</h1>
+  <p>TeX 形式の数式を note.com 記事用の形式に変換します。ローカル処理のみ・外部通信なし。</p>
+</header>
+
+<main>
+
+  <!-- 変換ツール -->
+  <div class="card">
+    <h2>TeX → Note 数式変換</h2>
+    <p class="desc">
+      入力欄に TeX 形式のテキストを貼り付けて「変換」を押してください。<br>
+      インライン数式 <span class="code">$...$</span> は <span class="code">$${...}$$</span> に変換します。
+      ディスプレイ数式 <span class="code">$$...$$</span> は <span class="code">$$</span> と数式と <span class="code">$$</span> をそれぞれ独立した行に分割します。
+      <code style="font-size:12px;color:#6b7280;">{ }</code> の内側にスペースは入りません。
+    </p>
+
+    <div class="editor-area">
+      <div class="editor-block">
+        <label>入力（TeX 形式）</label>
+        <textarea id="input" placeholder="例：質量エネルギー等価式は $E = mc^2$ です。&#10;&#10;ブロック数式の例：&#10;$$\int_0^\infty e^{-x^2} dx = \frac{\sqrt{\pi}}{2}$$"></textarea>
+      </div>
+      <div class="editor-block">
+        <label>出力（Note 形式）</label>
+        <textarea id="output" readonly placeholder="変換結果がここに表示されます"></textarea>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn-primary" onclick="convert()">変換</button>
+      <button class="btn-secondary btn-copy" id="copyBtn" onclick="copyOutput()">コピー</button>
+      <button class="btn-ghost" onclick="clearAll()">クリア</button>
+      <button class="btn-ghost" onclick="swapIO()">入出力を入れ替え</button>
+    </div>
+  </div>
+
+  <!-- 変換規則の説明 -->
+  <div class="card">
+    <h2>変換規則</h2>
+    <table class="rule-table">
+      <thead>
+        <tr>
+          <th>種類</th>
+          <th>TeX 形式</th>
+          <th>Note 形式</th>
+          <th>備考</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>ディスプレイ数式</td>
+          <td><span class="code">$$...$$</span></td>
+          <td><span class="code">$$</span> / 数式 / <span class="code">$$</span> を各行に分割</td>
+          <td>前後の空白はトリム</td>
+        </tr>
+        <tr>
+          <td>インライン数式</td>
+          <td><span class="code">$...$</span></td>
+          <td><span class="code">$${...}$$</span></td>
+          <td>前後の空白はトリム</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</main>
+
+<script>
+  // TeX → Note 形式変換
+  function texToNote(text) {
+    // $$...$$ と $...$ を1パスで処理（$$...$$ を先にマッチさせることで誤認識を防ぐ）
+    text = text.replace(/\$\$([\s\S]+?)\$\$|\$([\s\S]+?)\$/g, (_, display, inline) => {
+      if (display !== undefined) {
+        return '$$\n' + display.trim() + '\n$$\n';
+      } else {
+        return '$${' + inline.trim() + '}$$';
+      }
+    });
+
+    return text;
+  }
+
+  function convert() {
+    const input = document.getElementById('input').value;
+    document.getElementById('output').value = texToNote(input);
+  }
+
+  async function copyOutput() {
+    const output = document.getElementById('output').value;
+    if (!output) return;
+    try {
+      await navigator.clipboard.writeText(output);
+    } catch {
+      // fallback
+      const el = document.getElementById('output');
+      el.select();
+      document.execCommand('copy');
+    }
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = 'コピーしました！';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = 'コピー';
+      btn.classList.remove('copied');
+    }, 1500);
+  }
+
+  function clearAll() {
+    document.getElementById('input').value = '';
+    document.getElementById('output').value = '';
+  }
+
+  function swapIO() {
+    const inp = document.getElementById('input');
+    const out = document.getElementById('output');
+    const tmp = inp.value;
+    inp.value = out.value;
+    out.value = tmp;
+  }
+
+  // 入力変更時にリアルタイム変換
+  document.getElementById('input').addEventListener('input', convert);
+</script>
+
+</body>
+</html>
