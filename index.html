@@ -252,6 +252,12 @@
           <td><span class="code">$${...}$$</span></td>
           <td>前後の空白はトリム</td>
         </tr>
+        <tr>
+          <td>バックスラッシュ</td>
+          <td><span class="code">\</span></td>
+          <td><span class="code">\\</span></td>
+          <td>Note 貼り付け時に \ が消えるため2重化</td>
+        </tr>
       </tbody>
     </table>
   </div>
@@ -269,6 +275,9 @@
         return '$${' + inline.trim() + '}$$';
       }
     });
+
+    // Note では貼り付け時に \ が消えるため、\ を \\ に置換
+    text = text.replace(/\\/g, '\\\\');
 
     return text;
   }
